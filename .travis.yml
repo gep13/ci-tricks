@@ -1,4 +1,5 @@
 language: go
+go: 1.10.x
 sudo: required
 dist: trusty
 os:
@@ -24,3 +25,19 @@ matrix:
       env: POSTGRESQL_VERSION=9.2
     - os: osx
       env: POSTGRESQL_VERSION=9.3
+jobs:
+  include:
+    - stage: deploy
+      sudo: false
+      if: tag IS present
+      script:
+        - go get github.com/mitchellh/gox
+        - CGO_ENABLED=0 gox -osarch="linux/amd64 darwin/amd64 windows/amd64" -ldflags="-s -w"
+      deploy:
+        provider: releases
+        api_key: $GITHUB_TOKEN
+        skip_cleanup: true
+        file_glob: true
+        file: ci-tricks_*
+        on:
+          tags: true
